@@ -12,7 +12,7 @@ function App() {
     <Router>
       <Routes>
         <Route index path='' element={<Register />} />
-        <Route exact path='/user' element={<Test />} />
+        <Route exact path='/manager' element={<Test />} />
       </Routes>
 
     </Router>

@@ -36,22 +36,20 @@ function Register() {
     };
 
     const addMember = () => {
-        Axios.post('http://localhost:3001/create', {
-            id: id, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, post: post, address: address, authority: authority
-        }).then((response) => {
-
-            if (response.data.error) {
-                window.confirm("Error!")
-
-            } else {
-                var r = window.confirm("Success!")
-                if (r) {
-                    navigate("/user")
+        Axios
+            .post('http://localhost:3001/create', {
+                id: id, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, post: post, address: address, authority: authority
+            })
+            .then((response) => {
+                if (response.data.message) {
+                    alert("登録完了")
+                    navigate('/manager')
                 }
-            }
-        }
-
-        )
+                else {
+                    alert("登録失敗")
+                    handleClose()
+                }
+            })
     }
 
     const getMember = () => {
