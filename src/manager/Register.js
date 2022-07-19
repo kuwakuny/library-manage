@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import './style.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
@@ -10,25 +11,11 @@ import Axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { userSchema } from './UserValidation'
 import * as Yup from 'yup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { useForm } from 'react-hook-form'
 
-function Register() {
-    const createUser = async (event) => {
-        event.preventDefault()
-        let formData = {
-            nameKanji: event.target[0].value,
-            nameKana: event.target[1].value,
-            birthday: event.target[2].value,
-            gender: event.target[3].value,
-            email: event.target[4].value,
-            phone: event.target[5].value,
-            post: event.target[6].value,
-            address: event.target[7].value,
-        }
-        const isValid = await userSchema.isValid(formData)
-        console.log(isValid)
-    }
-
-    const navigate = useNavigate()
+export default function Register() {
+    const registerID = '100000'
 
     const [id, setId] = useState('')
     const [password, setPassword] = useState('')
@@ -43,9 +30,11 @@ function Register() {
     const [authority, setAuthority] = useState(0)
     const [memberList, setMemberList] = useState([])
 
-    const Clear = () => {
-        document.allForm.reset()
-    }
+    const navigate = useNavigate()
+
+    const { register, handleSubmit, reset, formState: { errors } } = useForm({
+        resolver: yupResolver(userSchema),
+    });
 
     const setMember = () => {
         setMemberList([...memberList, {
@@ -54,28 +43,17 @@ function Register() {
     }
 
     const addMember = () => {
-        Axios
-            .post('http://localhost:3001/create', {
-                id: id, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, post: post, address: address, authority: authority
-            })
-            .then((response) => {
-                if (response.data.message) {
-                    alert("登録完了")
-                    // navigate('/manager')
-                }
-                else {
-                    alert("登録失敗")
-                    handleClose()
-                }
-            })
-    }
-
-    const getMember = () => {
-        Axios
-            .get('http://localhost:3001/members')
-            .then((response) => {
-                setMemberList(response.data)
-            })
+        Axios.post('http://localhost:3001/register', {
+            id: id, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, post: post, address: address, authority: authority
+        }).then((response) => {
+            if (response.data.message) {
+                alert("登録完了")
+                navigate('/manager')
+            } else {
+                alert("登録失敗")
+                handleClose()
+            }
+        })
     }
 
     const getYmd = () => {
@@ -106,77 +84,95 @@ function Register() {
             <div className="card-body">
                 <h4 className="mt-1">会員情報登録</h4>
                 <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
-                <form name="allForm" onSubmit={createUser}>
+                <form noValidate name="allForm" onSubmit={handleSubmit((() => {
+                    setId(Math.floor(Math.random() * 900000) + 100000)
+                    setMember()
+                    handleShow()
+                }))}>
                     <Form.Group className="mt-4 mb-3">
                         <Form.Label className="fw-bold">名前（漢字）</Form.Label>
                         <Form.Control type="text" placeholder="図書タロウ" onChange={(event) => {
                             setNameKanji(event.target.value)
-                        }} />
-                        {/* <span>{errors?.nameKanji?.message}</span> */}
+                        }} {...register('nameKanji')} />
+                        <span className="errors">{errors?.nameKanji?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bolder">名前（カタカナ）</Form.Label>
-                        <Form.Control type="text" placeholder="トショタロウ" onChange={(event) => {
+                        <Form.Control {...register('nameKana')} type="text" placeholder="トショタロウ" onChange={(event) => {
                             setNameKana(event.target.value)
                         }} />
+                        <span className="errors">{errors?.nameKana?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">生年月日</Form.Label>
                         <div className="col-md-auto">
-                            <Form.Group>
-                                <Form.Control type="date" name="dob" onChange={(event) => {
+                            <Form.Group >
+                                <Form.Control type="date" name="dob" {...register('birthday')} onChange={(event) => {
                                     setBirthday(event.target.value)
                                     setPassword(event.target.value.replace(/-/g, ''))
                                 }} />
+                                <span className="errors">{errors?.birthday?.message}</span>
                             </Form.Group>
                         </div>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">性別</Form.Label>
                         <div>
-                            <p className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" />
-                                <label className="form-check-label" htmlFor="inlineRadio1">男性</label>
-                            </p>
-                            <p className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="1" onChange={(event) => {
+                            <div className="form-check form-check-inline">
+                                <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" onChange={(event) => {
                                     if (event.target.checked) {
-                                        setGender(event.target.value)
+                                        setGender(0)
+                                    }
+                                }} checked={gender === 0} />
+                                <label className="form-check-label" htmlFor="inlineRadio1">男性</label>
+                            </div>
+                            <div className="form-check form-check-inline">
+                                <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" onChange={(event) => {
+                                    if (event.target.checked) {
+                                        setGender(1)
                                     }
                                 }} />
                                 <label className="form-check-label" htmlFor="inlineRadio2">女性</label>
-                            </p>
+                            </div>
+                            <div className="errors">{errors?.gender?.message}</div>
                         </div>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">メールアドレス</Form.Label>
-                        <Form.Control type="text" placeholder="mirine@global.com" onChange={(event) => {
+                        <Form.Control {...register('email')} type="email" placeholder="mirine@global.com" onChange={(event) => {
                             setEmail(event.target.value)
                         }} />
+                        <span className="errors">{errors?.email?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">電話番号</Form.Label>
-                        <Form.Control type="number" placeholder="09012345678" onChange={(event) => {
+                        <Form.Control {...register('phone')} type="tel" placeholder="09012345678" onChange={(event) => {
                             setPhone(event.target.value)
                         }} />
+                        <span className="errors">{errors?.phone?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">郵便番号</Form.Label>
-                        <Form.Control type="number" placeholder="1350051" onChange={(event) => {
+                        <Form.Control {...register('post')} type="number" placeholder="1350051" onChange={(event) => {
                             setPost(event.target.value)
                         }} />
+                        <span className="errors">{errors?.post?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">住所</Form.Label>
-                        <Form.Control type="text" placeholder="東京都豊島区駒込１ー２ー３ミリネビル２０１" onChange={(event) => {
+                        <Form.Control {...register('address')} type="text" placeholder="東京都豊島区駒込１ー２ー３ミリネビル２０１" onChange={(event) => {
                             setAddress(event.target.value)
                         }} />
+                        <span className="errors">{errors?.address?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <div className="form-check">
-                            <input className="form-check-input" type="checkbox" value="1" id="flexCheckDefault" onChange={(event) => {
-                                if (event.target.checked === true)
-                                    setAuthority(event.target.value)
+                            <input className="form-check-input" type="checkbox" id="flexCheckDefault" onChange={(event) => {
+                                if (event.target.checked) {
+                                    setAuthority(1)
+                                } else {
+                                    setAuthority(0)
+                                }
                             }} />
                             <label className="form-check-label" htmlFor="flexCheckDefault">
                                 登録者に管理者権限を与える。
@@ -184,16 +180,11 @@ function Register() {
                         </div>
                     </Form.Group>
                     <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
-
                     <div className="float-end" style={{ marginTop: "30px" }}>
-                        <Button variant="secondary" onClick={Clear}>クリア</Button>
-                        <Button type="submit" className="ms-2" variant="primary" onClick={() => {
-                            setId(Math.floor(Math.random() * 900000) + 100000)
-                            setMember()
-                            handleShow()
-                        }}>
-                            登録
-                        </Button>
+                        <Button variant="secondary" onClick={(() => {
+                            reset()
+                        })}>クリア</Button>
+                        <Button type="submit" className="ms-2" variant="primary">登録</Button>
                     </div>
                 </form>
                 <Modal
@@ -208,74 +199,57 @@ function Register() {
                     <Modal.Body>
                         <Container>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">ユーザーID |</Col>
+                                <Col sm={4} className="text-end text-secondary">ユーザーID&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{id} </Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">パスワード |</Col>
+                                <Col sm={4} className="text-end text-secondary">パスワード&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{password}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(漢字) |</Col>
+                                <Col sm={4} className="text-end text-secondary">名前(漢字)&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{nameKanji}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(カタカナ) |</Col>
+                                <Col sm={4} className="text-end text-secondary">名前(カタカナ)&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{nameKana}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">生年月日 |</Col>
+                                <Col sm={4} className="text-end text-secondary">生年月日&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{getYmd()}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">性別 |</Col>
+                                <Col sm={4} className="text-end text-secondary">性別&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{genderText()}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">メールアドレス |</Col>
+                                <Col sm={4} className="text-end text-secondary">メールアドレス&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{email}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">電話番号 |</Col>
+                                <Col sm={4} className="text-end text-secondary">電話番号&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{phone}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">郵便番号 |</Col>
+                                <Col sm={4} className="text-end text-secondary">郵便番号&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{post}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">住所 |</Col>
+                                <Col sm={4} className="text-end text-secondary">住所&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{address}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">権限 |</Col>
+                                <Col sm={4} className="text-end text-secondary">権限&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{authorityText()}</Col>
                             </Row>
                         </Container>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="success" onClick={getMember}>DB取得</Button>
                         <Button variant="secondary" onClick={handleClose}>戻る</Button>
                         <Button variant="primary" onClick={addMember}>確定</Button>
                     </Modal.Footer>
-                    {memberList.map((val, key) => {
-                        return <div className="member ms-3" key={val.id}>
-                            <div>id: {val.id}</div>
-                            <div>password: {val.password}</div>
-                            <div>nameKanji: {val.nameKanji}</div>
-                            <div>nameKana: {val.nameKana}</div>
-                            <div>birthday: {getYmd()}</div>
-                            <div>gender: {genderText()}</div>
-                            <div>email: {val.email}</div>
-                            <div>phone: {val.phone}</div>
-                            <div>post: {val.post}</div>
-                            <div>address: {val.address}</div>
-                            <div>authority: {authorityText()}</div>
-                        </div>
-                    })}
                 </Modal>
             </div>
         </div >
     )
 }
-export default Register
