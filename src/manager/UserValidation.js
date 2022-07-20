@@ -38,7 +38,6 @@ export const userSchema = Yup.object().shape({
     address: Yup
         .string()
         .required('住所を入力してください。')
-        .min(7, '7文字以上を入力してください。')
         .max(70, '70文字以下を入力してください。')
         .matches(/^[^\x20-\x7e]*$/, '全角文字のみ')
     ,

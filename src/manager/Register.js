@@ -10,14 +10,15 @@ import Col from 'react-bootstrap/Col'
 import Axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { userSchema } from './UserValidation'
+// eslint-disable-next-line
 import * as Yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 
 export default function Register() {
-    const registerID = '100000'
+    const regID = '100000'
 
-    const [id, setId] = useState('')
+    const [memberID, setMemberID] = useState('')
     const [password, setPassword] = useState('')
     const [nameKanji, setNameKanji] = useState('')
     const [nameKana, setNameKana] = useState('')
@@ -25,9 +26,9 @@ export default function Register() {
     const [gender, setGender] = useState(0)
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
-    const [post, setPost] = useState('')
+    const [postCode, setPostCode] = useState('')
     const [address, setAddress] = useState('')
-    const [authority, setAuthority] = useState(0)
+    const [authorityCODE, setAuthorityCODE] = useState(0)
     const [memberList, setMemberList] = useState([])
 
     const navigate = useNavigate()
@@ -38,19 +39,19 @@ export default function Register() {
 
     const setMember = () => {
         setMemberList([...memberList, {
-            id: id, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, post: post, address: address, authority: authority
+            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE,
         }])
     }
 
     const addMember = () => {
         Axios.post('http://localhost:3001/register', {
-            id: id, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, post: post, address: address, authority: authority
+            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE, regID: regID
         }).then((response) => {
             if (response.data.message) {
-                alert("登録完了")
+                alert('登録完了')
                 navigate('/manager')
             } else {
-                alert("登録失敗")
+                alert('IDが重複しています。登録をもう一度やり直してください。')
                 handleClose()
             }
         })
@@ -69,7 +70,7 @@ export default function Register() {
     }
 
     const authorityText = () => {
-        if (authority === 0) {
+        if (authorityCODE === 0) {
             return '一般会員'
         }
         return '管理者'
@@ -85,15 +86,15 @@ export default function Register() {
                 <h4 className="mt-1">会員情報登録</h4>
                 <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
                 <form noValidate name="allForm" onSubmit={handleSubmit((() => {
-                    setId(Math.floor(Math.random() * 900000) + 100000)
+                    setMemberID(Math.floor(Math.random() * 900000) + 100000)
                     setMember()
                     handleShow()
                 }))}>
                     <Form.Group className="mt-4 mb-3">
                         <Form.Label className="fw-bold">名前（漢字）</Form.Label>
-                        <Form.Control type="text" placeholder="図書タロウ" onChange={(event) => {
+                        <Form.Control {...register('nameKanji')} type="text" placeholder="図書タロウ" onChange={(event) => {
                             setNameKanji(event.target.value)
-                        }} {...register('nameKanji')} />
+                        }} />
                         <span className="errors">{errors?.nameKanji?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
@@ -154,7 +155,7 @@ export default function Register() {
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">郵便番号</Form.Label>
                         <Form.Control {...register('post')} type="number" placeholder="1350051" onChange={(event) => {
-                            setPost(event.target.value)
+                            setPostCode(event.target.value)
                         }} />
                         <span className="errors">{errors?.post?.message}</span>
                     </Form.Group>
@@ -169,9 +170,9 @@ export default function Register() {
                         <div className="form-check">
                             <input className="form-check-input" type="checkbox" id="flexCheckDefault" onChange={(event) => {
                                 if (event.target.checked) {
-                                    setAuthority(1)
+                                    setAuthorityCODE(1)
                                 } else {
-                                    setAuthority(0)
+                                    setAuthorityCODE(0)
                                 }
                             }} />
                             <label className="form-check-label" htmlFor="flexCheckDefault">
@@ -200,7 +201,7 @@ export default function Register() {
                         <Container>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">ユーザーID&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{id} </Col>
+                                <Col sm={6}>{memberID} </Col>
                             </Row>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">パスワード&nbsp;&nbsp;|</Col>
@@ -232,7 +233,7 @@ export default function Register() {
                             </Row>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">郵便番号&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{post}</Col>
+                                <Col sm={6}>{postCode}</Col>
                             </Row>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">住所&nbsp;&nbsp;|</Col>

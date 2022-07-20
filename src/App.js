@@ -1,20 +1,21 @@
 import React from 'react';
-import Register from './manager/Register';
 import {
   BrowserRouter as Router,
   Route, Routes
 } from 'react-router-dom'
-import Test from './manager/Test';
+import Register from './manager/Register';
+import Manager from './manager/Manager';
+import Edit from './manager/Edit';
 
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route index path='' element={<Register />} />
-        <Route exact path='/manager' element={<Test />} />
+        <Route index path='/' element={<Register />} />
+        <Route exact path='/manager' element={<Manager />} />
+        <Route exact path='/editor' element={<Edit />} />
       </Routes>
-
     </Router>
   );
 }
