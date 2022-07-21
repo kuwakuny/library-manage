@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './style.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import Form from 'react-bootstrap/Form'
@@ -17,39 +17,53 @@ import { useForm } from 'react-hook-form'
 
 export default function Edit() {
     const regID = '100000'
-    const selectedID = '100001'
+    const getMemberID = '505532'
 
     const [memberID, setMemberID] = useState('')
-
     const [password, setPassword] = useState('')
     const [nameKanji, setNameKanji] = useState('')
     const [nameKana, setNameKana] = useState('')
     const [birthday, setBirthday] = useState()
-    const [gender, setGender] = useState(0)
+    const [gender, setGender] = useState('男性')
+    const handleRadio = (event) => { setGender(event.target.value) }
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [postCode, setPostCode] = useState('')
     const [address, setAddress] = useState('')
     const [authorityCODE, setAuthorityCODE] = useState(0)
-    const [memberList, setMemberList] = useState([])
+    // const [memberList, setMemberList] = useState([])
 
     const navigate = useNavigate()
 
     const { register, handleSubmit, reset, formState: { errors } } = useForm({
         resolver: yupResolver(userSchema),
-    });
+    })
 
-    const getMembers = () => {
-        Axios.get('http://localhost:3001/edit').then((response) => {
-            setMemberList(response.data)
+    const getMember = () => {
+        Axios.get('http://localhost:3001/get', { params: { getMemberID: getMemberID } }).then((response) => {
+            if (response.data.error) {
+                alert('失敗')
+            } else {
+                const r = response.data[0]
+                setPassword(r.password)
+                setNameKanji(r.nameKanji)
+                setNameKana(r.nameKana)
+                setBirthday(getYmd(r.birthday))
+                // setGender(r.gender)
+                setEmail(r.email)
+                setPhone(r.phone)
+                setPostCode(r.postCode)
+                setAddress(r.address)
+                setAuthorityCODE(r.authorityCODE)
+            }
         });
     };
 
-    const setMember = () => {
-        setMemberList([...memberList, {
-            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE,
-        }])
-    }
+    // const setMember = () => {
+    //     setMemberList([...memberList, {
+    //         memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE
+    //     }])
+    // }
 
     const addMember = () => {
         Axios.post('http://localhost:3001/register', {
@@ -65,7 +79,7 @@ export default function Edit() {
         })
     }
 
-    const getYmd = () => {
+    const getYmd = (birthday) => {
         let d = new Date(birthday)
         return d.getFullYear() + '-' + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : '0' + (d.getMonth() + 1)) + '-' + (d.getDate() > 9 ? d.getDate().toString() : '0' + d.getDate().toString())
     }
@@ -89,26 +103,25 @@ export default function Edit() {
     const handleShow = () => setShow(true)
 
     return (
-        <div className="card my-5 mx-auto" style={{ width: "25rem" }}>
-            {getMembers()}
+        <div onLoad={getMember()} className="card my-5 mx-auto" style={{ width: "25rem" }}>
             <div className="card-body">
-                <h4 className="mt-1">会員情報登録</h4>
+                <h4 className="mt-1">会員情報修正</h4>
                 <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
                 <form noValidate name="allForm" onSubmit={handleSubmit((() => {
-                    setMemberID(Math.floor(Math.random() * 900000) + 100000)
-                    setMember()
+                    //setMemberID(Math.floor(Math.random() * 900000) + 100000)
+                    // setMember()
                     handleShow()
                 }))}>
                     <Form.Group className="mt-4 mb-3">
                         <Form.Label className="fw-bold">名前（漢字）</Form.Label>
-                        <Form.Control {...register('nameKanji')} type="text" placeholder="図書タロウ" value="3" onChange={(event) => {
+                        <Form.Control defaultValue={nameKanji} {...register('nameKanji')} type="text" placeholder="図書タロウ" onChange={(event) => {
                             setNameKanji(event.target.value)
                         }} />
                         <span className="errors">{errors?.nameKanji?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bolder">名前（カタカナ）</Form.Label>
-                        <Form.Control {...register('nameKana')} type="text" placeholder="トショタロウ" onChange={(event) => {
+                        <Form.Control defaultValue={nameKana}  {...register('nameKana')} type="text" placeholder="トショタロウ" onChange={(event) => {
                             setNameKana(event.target.value)
                         }} />
                         <span className="errors">{errors?.nameKana?.message}</span>
@@ -117,7 +130,7 @@ export default function Edit() {
                         <Form.Label className="fw-bold">生年月日</Form.Label>
                         <div className="col-md-auto">
                             <Form.Group >
-                                <Form.Control type="date" name="dob" {...register('birthday')} onChange={(event) => {
+                                <Form.Control defaultValue={birthday} type="date" name="dob" {...register('birthday')} onChange={(event) => {
                                     setBirthday(event.target.value)
                                     setPassword(event.target.value.replace(/-/g, ''))
                                 }} />
@@ -129,19 +142,11 @@ export default function Edit() {
                         <Form.Label className="fw-bold">性別</Form.Label>
                         <div>
                             <div className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" onChange={(event) => {
-                                    if (event.target.checked) {
-                                        setGender(0)
-                                    }
-                                }} checked={gender === 0} />
+                                <input checked={gender === '男性'} className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value='男性' onChange={handleRadio} />
                                 <label className="form-check-label" htmlFor="inlineRadio1">男性</label>
                             </div>
                             <div className="form-check form-check-inline">
-                                <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" onChange={(event) => {
-                                    if (event.target.checked) {
-                                        setGender(1)
-                                    }
-                                }} />
+                                <input checked={gender === '女性'} className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value='女性' onChange={handleRadio} />
                                 <label className="form-check-label" htmlFor="inlineRadio2">女性</label>
                             </div>
                             <div className="errors">{errors?.gender?.message}</div>
@@ -149,28 +154,28 @@ export default function Edit() {
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">メールアドレス</Form.Label>
-                        <Form.Control {...register('email')} type="email" placeholder="mirine@global.com" onChange={(event) => {
+                        <Form.Control defaultValue={email} {...register('email')} type="email" placeholder="mirine@global.com" onChange={(event) => {
                             setEmail(event.target.value)
                         }} />
                         <span className="errors">{errors?.email?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">電話番号</Form.Label>
-                        <Form.Control {...register('phone')} type="tel" placeholder="09012345678" onChange={(event) => {
+                        <Form.Control defaultValue={phone}{...register('phone')} type="tel" placeholder="09012345678" onChange={(event) => {
                             setPhone(event.target.value)
                         }} />
                         <span className="errors">{errors?.phone?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">郵便番号</Form.Label>
-                        <Form.Control {...register('post')} type="number" placeholder="1350051" onChange={(event) => {
+                        <Form.Control defaultValue={postCode} {...register('post')} type="number" placeholder="1350051" onChange={(event) => {
                             setPostCode(event.target.value)
                         }} />
                         <span className="errors">{errors?.post?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">住所</Form.Label>
-                        <Form.Control {...register('address')} type="text" placeholder="東京都豊島区駒込１ー２ー３ミリネビル２０１" onChange={(event) => {
+                        <Form.Control defaultValue={address}{...register('address')} type="text" placeholder="東京都豊島区駒込１ー２ー３ミリネビル２０１" onChange={(event) => {
                             setAddress(event.target.value)
                         }} />
                         <span className="errors">{errors?.address?.message}</span>
@@ -178,10 +183,10 @@ export default function Edit() {
                     <Form.Group className="mb-3">
                         <div className="form-check">
                             <input className="form-check-input" type="checkbox" id="flexCheckDefault" onChange={(event) => {
-                                if (event.target.checked) {
-                                    setAuthorityCODE(1)
-                                } else {
+                                if (event.target.checked === false) {
                                     setAuthorityCODE(0)
+                                } else {
+                                    setAuthorityCODE(1)
                                 }
                             }} />
                             <label className="form-check-label" htmlFor="flexCheckDefault">
@@ -193,7 +198,7 @@ export default function Edit() {
                     <div className="float-end" style={{ marginTop: "30px" }}>
                         <Button variant="secondary" onClick={(() => {
                             reset()
-                        })}>クリア</Button>
+                        })}>リセット</Button>
                         <Button type="submit" className="ms-2" variant="primary">登録</Button>
                     </div>
                 </form>
