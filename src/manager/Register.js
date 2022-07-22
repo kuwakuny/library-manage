@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
-import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Axios from 'axios'
@@ -17,19 +16,16 @@ import { useForm } from 'react-hook-form'
 
 export default function Register() {
     const regID = '100000'
-
     const [memberID, setMemberID] = useState('')
     const [password, setPassword] = useState('')
     const [nameKanji, setNameKanji] = useState('')
     const [nameKana, setNameKana] = useState('')
     const [birthday, setBirthday] = useState()
-    const [gender, setGender] = useState(0)
+    const [gender, setGender] = useState('m')
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
     const [postCode, setPostCode] = useState('')
     const [address, setAddress] = useState('')
-    const [authorityCODE, setAuthorityCODE] = useState(0)
-    const [memberList, setMemberList] = useState([])
 
     const navigate = useNavigate()
 
@@ -37,49 +33,44 @@ export default function Register() {
         resolver: yupResolver(userSchema),
     });
 
-    const setMember = () => {
-        setMemberList([...memberList, {
-            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE,
-        }])
-    }
+    const [show, setShow] = useState(false)
+    const handleClose = () => setShow(false)
+    const handleShow = () => setShow(true)
 
     const addMember = () => {
         Axios.post('http://localhost:3001/register', {
-            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE, regID: regID
+            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, regID: regID
         }).then((response) => {
             if (response.data.message) {
                 alert('登録完了')
                 navigate('/manager')
             } else {
-                alert('IDが重複しています。登録をもう一度やり直してください。')
+                alert('登録失敗')
                 handleClose()
             }
         })
     }
 
-    const getYmd = () => {
-        let d = new Date(birthday)
-        return d.getFullYear() + '-' + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : '0' + (d.getMonth() + 1)) + '-' + (d.getDate() > 9 ? d.getDate().toString() : '0' + d.getDate().toString())
-    }
-
     const genderText = () => {
-        if (gender === 0) {
+        if (gender === 'm') {
             return '男性'
         }
         return '女性'
     }
-
-    const authorityText = () => {
-        if (authorityCODE === 0) {
-            return '一般会員'
+    /*
+    const itemNames = ["ユーザーID", "パスワード", "名前(漢字)", "名前(カタカナ)", "生年月日", "性別", "メールアドレス", "電話番号", "郵便番号", "住所"]
+    const items = [memberID, password, nameKanji, nameKana, birthday, genderText(), email, phone, postCode, address]
+    const itemList = (itemNames, items) => {
+        const result = []
+        for (let i = 0; i < itemNames.length; i++) {
+            result.push(<Row key={i} className="mb-2">
+                <Col sm={4} className="text-end text-secondary">{itemNames[i]}</Col>
+                <Col sm={6}>{items[i]} </Col>
+            </Row>)
         }
-        return '管理者'
+        return result
     }
-
-    const [show, setShow] = useState(false)
-    const handleClose = () => setShow(false)
-    const handleShow = () => setShow(true)
-
+    */
     return (
         <div className="card my-5 mx-auto" style={{ width: "25rem" }}>
             <div className="card-body">
@@ -87,21 +78,16 @@ export default function Register() {
                 <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
                 <form noValidate name="allForm" onSubmit={handleSubmit((() => {
                     setMemberID(Math.floor(Math.random() * 900000) + 100000)
-                    setMember()
                     handleShow()
                 }))}>
                     <Form.Group className="mt-4 mb-3">
                         <Form.Label className="fw-bold">名前（漢字）</Form.Label>
-                        <Form.Control {...register('nameKanji')} type="text" placeholder="図書タロウ" onChange={(event) => {
-                            setNameKanji(event.target.value)
-                        }} />
+                        <Form.Control {...register('nameKanji')} type="text" placeholder="図書タロウ" onChange={(event) => { setNameKanji(event.target.value) }} />
                         <span className="errors">{errors?.nameKanji?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bolder">名前（カタカナ）</Form.Label>
-                        <Form.Control {...register('nameKana')} type="text" placeholder="トショタロウ" onChange={(event) => {
-                            setNameKana(event.target.value)
-                        }} />
+                        <Form.Control {...register('nameKana')} type="text" placeholder="トショタロウ" onChange={(event) => { setNameKana(event.target.value) }} />
                         <span className="errors">{errors?.nameKana?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
@@ -122,15 +108,15 @@ export default function Register() {
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" onChange={(event) => {
                                     if (event.target.checked) {
-                                        setGender(0)
+                                        setGender('m')
                                     }
-                                }} checked={gender === 0} />
+                                }} checked={gender === 'm'} />
                                 <label className="form-check-label" htmlFor="inlineRadio1">男性</label>
                             </div>
                             <div className="form-check form-check-inline">
                                 <input className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" onChange={(event) => {
                                     if (event.target.checked) {
-                                        setGender(1)
+                                        setGender('f')
                                     }
                                 }} />
                                 <label className="form-check-label" htmlFor="inlineRadio2">女性</label>
@@ -140,51 +126,27 @@ export default function Register() {
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">メールアドレス</Form.Label>
-                        <Form.Control {...register('email')} type="email" placeholder="mirine@global.com" onChange={(event) => {
-                            setEmail(event.target.value)
-                        }} />
+                        <Form.Control {...register('email')} type="email" placeholder="mirine@global.com" onChange={(event) => { setEmail(event.target.value) }} />
                         <span className="errors">{errors?.email?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">電話番号</Form.Label>
-                        <Form.Control {...register('phone')} type="tel" placeholder="09012345678" onChange={(event) => {
-                            setPhone(event.target.value)
-                        }} />
+                        <Form.Control {...register('phone')} type="tel" placeholder="09012345678" onChange={(event) => { setPhone(event.target.value) }} />
                         <span className="errors">{errors?.phone?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">郵便番号</Form.Label>
-                        <Form.Control {...register('post')} type="number" placeholder="1350051" onChange={(event) => {
-                            setPostCode(event.target.value)
-                        }} />
+                        <Form.Control {...register('post')} type="number" placeholder="1350051" onChange={(event) => { setPostCode(event.target.value) }} />
                         <span className="errors">{errors?.post?.message}</span>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-bold">住所</Form.Label>
-                        <Form.Control {...register('address')} type="text" placeholder="東京都豊島区駒込１ー２ー３ミリネビル２０１" onChange={(event) => {
-                            setAddress(event.target.value)
-                        }} />
+                        <Form.Control {...register('address')} type="text" placeholder="東京都豊島区駒込１ー２ー３ミリネビル２０１" onChange={(event) => { setAddress(event.target.value) }} />
                         <span className="errors">{errors?.address?.message}</span>
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <div className="form-check">
-                            <input className="form-check-input" type="checkbox" id="flexCheckDefault" onChange={(event) => {
-                                if (event.target.checked) {
-                                    setAuthorityCODE(1)
-                                } else {
-                                    setAuthorityCODE(0)
-                                }
-                            }} />
-                            <label className="form-check-label" htmlFor="flexCheckDefault">
-                                登録者に管理者権限を与える。
-                            </label>
-                        </div>
                     </Form.Group>
                     <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
                     <div className="float-end" style={{ marginTop: "30px" }}>
-                        <Button variant="secondary" onClick={(() => {
-                            reset()
-                        })}>クリア</Button>
+                        <Button variant="secondary" onClick={(() => { reset() })}>クリア</Button>
                         <Button type="submit" className="ms-2" variant="primary">登録</Button>
                     </div>
                 </form>
@@ -198,52 +160,7 @@ export default function Register() {
                         <Modal.Title>登録情報確認</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Container>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">ユーザーID&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{memberID} </Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">パスワード&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{password}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(漢字)&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{nameKanji}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(カタカナ)&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{nameKana}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">生年月日&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{getYmd()}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">性別&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{genderText()}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">メールアドレス&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{email}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">電話番号&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{phone}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">郵便番号&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{postCode}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">住所&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{address}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">権限&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{authorityText()}</Col>
-                            </Row>
-                        </Container>
+                        {/* {itemList(itemNames, items)} */}
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={handleClose}>戻る</Button>

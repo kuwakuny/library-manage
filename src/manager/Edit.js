@@ -16,15 +16,15 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 
 export default function Edit() {
-    const regID = '100000'
-    const getMemberID = '505532'
+    const getMemberID = '505008'
+    const updID = '200000'
 
     const [memberID, setMemberID] = useState('')
     const [password, setPassword] = useState('')
     const [nameKanji, setNameKanji] = useState('')
     const [nameKana, setNameKana] = useState('')
     const [birthday, setBirthday] = useState()
-    const [gender, setGender] = useState('男性')
+    const [gender, setGender] = useState('m')
     const handleRadio = (event) => { setGender(event.target.value) }
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
@@ -48,7 +48,7 @@ export default function Edit() {
                 setNameKanji(r.nameKanji)
                 setNameKana(r.nameKana)
                 setBirthday(getYmd(r.birthday))
-                // setGender(r.gender)
+                setGender(r.gender)
                 setEmail(r.email)
                 setPhone(r.phone)
                 setPostCode(r.postCode)
@@ -58,20 +58,17 @@ export default function Edit() {
         })
     }
 
-    useEffect(() => {
-        getMember()
-    }, [])
-
-    const addMember = () => {
-        Axios.post('http://localhost:3001/register', {
-            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, regID: regID
+    const updMember = () => {
+        Axios.put('http://localhost:3001/update', {
+            nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, updID: updID, getMemberID: getMemberID
         }).then((response) => {
-            if (response.data.message) {
-                alert('登録完了')
-                navigate('/manager')
-            } else {
-                alert('IDが重複しています。登録をもう一度やり直してください。')
+            if (response.data.error) {
+                alert('修正失敗')
                 handleClose()
+
+            } else {
+                alert('修正完了')
+                navigate('/manager')
             }
         })
     }
@@ -81,9 +78,21 @@ export default function Edit() {
         return d.getFullYear() + '-' + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : '0' + (d.getMonth() + 1)) + '-' + (d.getDate() > 9 ? d.getDate().toString() : '0' + d.getDate().toString())
     }
 
+    const genderText = () => {
+        if (gender === 'm') {
+            return '男性'
+        }
+        return '女性'
+    }
+
     const [show, setShow] = useState(false)
     const handleClose = () => setShow(false)
     const handleShow = () => setShow(true)
+
+    useEffect(() => {
+        getMember()
+        // eslint-disable-next-line
+    }, [])
 
     return (
         <div className="card my-5 mx-auto" style={{ width: "25rem" }}>
@@ -91,7 +100,6 @@ export default function Edit() {
                 <h4 className="mt-1">会員情報修正</h4>
                 <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
                 <form noValidate name="allForm" onSubmit={handleSubmit((() => {
-                    // setMember()
                     handleShow()
                 }))}>
                     <Form.Group className="mt-4 mb-3">
@@ -124,11 +132,11 @@ export default function Edit() {
                         <Form.Label className="fw-bold">性別</Form.Label>
                         <div>
                             <div className="form-check form-check-inline">
-                                <input checked={gender === '男性'} className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value='男性' onChange={handleRadio} />
+                                <input checked={gender === 'm'} className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value='m' onChange={handleRadio} />
                                 <label className="form-check-label" htmlFor="inlineRadio1">男性</label>
                             </div>
                             <div className="form-check form-check-inline">
-                                <input checked={gender === '女性'} className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value='女性' onChange={handleRadio} />
+                                <input checked={gender === 'f'} className="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value='f' onChange={handleRadio} />
                                 <label className="form-check-label" htmlFor="inlineRadio2">女性</label>
                             </div>
                             <div className="errors">{errors?.gender?.message}</div>
@@ -177,55 +185,55 @@ export default function Edit() {
                     keyboard={false}
                 >
                     <Modal.Header closeButton>
-                        <Modal.Title>登録情報確認</Modal.Title>
+                        <Modal.Title> 修正情報確認</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <Container>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">ユーザーID&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">ユーザーID</Col>
                                 <Col sm={6}>{getMemberID} </Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">パスワード&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">パスワード</Col>
                                 <Col sm={6}>{password}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(漢字)&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">名前(漢字)</Col>
                                 <Col sm={6}>{nameKanji}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(カタカナ)&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">名前(カタカナ)</Col>
                                 <Col sm={6}>{nameKana}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">生年月日&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">生年月日</Col>
                                 <Col sm={6}>{birthday}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">性別&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{gender}</Col>
+                                <Col sm={4} className="text-end text-secondary">性別</Col>
+                                <Col sm={6}>{genderText()}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">メールアドレス&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">メールアドレス</Col>
                                 <Col sm={6}>{email}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">電話番号&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">電話番号</Col>
                                 <Col sm={6}>{phone}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">郵便番号&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">郵便番号</Col>
                                 <Col sm={6}>{postCode}</Col>
                             </Row>
                             <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">住所&nbsp;&nbsp;|</Col>
+                                <Col sm={4} className="text-end text-secondary">住所</Col>
                                 <Col sm={6}>{address}</Col>
                             </Row>
                         </Container>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={handleClose}>戻る</Button>
-                        <Button variant="primary" onClick={addMember}>確定</Button>
+                        <Button variant="primary" onClick={updMember}>確定</Button>
                     </Modal.Footer>
                 </Modal>
             </div>

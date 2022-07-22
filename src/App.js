@@ -7,7 +7,6 @@ import Register from './manager/Register';
 import Manager from './manager/Manager';
 import Edit from './manager/Edit';
 
-
 function App() {
   return (
     <Router>
