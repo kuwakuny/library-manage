@@ -31,7 +31,6 @@ export default function Edit() {
     const [postCode, setPostCode] = useState('')
     const [address, setAddress] = useState('')
     const [authorityCODE, setAuthorityCODE] = useState(0)
-    // const [memberList, setMemberList] = useState([])
 
     const navigate = useNavigate()
 
@@ -39,7 +38,7 @@ export default function Edit() {
         resolver: yupResolver(userSchema),
     })
 
-    const getMember = () => {
+    useEffect(() => {
         Axios.get('http://localhost:3001/get', { params: { getMemberID: getMemberID } }).then((response) => {
             if (response.data.error) {
                 alert('失敗')
@@ -55,15 +54,10 @@ export default function Edit() {
                 setPostCode(r.postCode)
                 setAddress(r.address)
                 setAuthorityCODE(r.authorityCODE)
+                reset()
             }
-        });
-    };
-
-    // const setMember = () => {
-    //     setMemberList([...memberList, {
-    //         memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE
-    //     }])
-    // }
+        })
+    }, [reset])
 
     const addMember = () => {
         Axios.post('http://localhost:3001/register', {
@@ -84,13 +78,6 @@ export default function Edit() {
         return d.getFullYear() + '-' + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : '0' + (d.getMonth() + 1)) + '-' + (d.getDate() > 9 ? d.getDate().toString() : '0' + d.getDate().toString())
     }
 
-    const genderText = () => {
-        if (gender === 0) {
-            return '男性'
-        }
-        return '女性'
-    }
-
     const authorityText = () => {
         if (authorityCODE === 0) {
             return '一般会員'
@@ -103,12 +90,11 @@ export default function Edit() {
     const handleShow = () => setShow(true)
 
     return (
-        <div onLoad={getMember()} className="card my-5 mx-auto" style={{ width: "25rem" }}>
+        <div className="card my-5 mx-auto" style={{ width: "25rem" }}>
             <div className="card-body">
                 <h4 className="mt-1">会員情報修正</h4>
                 <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
                 <form noValidate name="allForm" onSubmit={handleSubmit((() => {
-                    //setMemberID(Math.floor(Math.random() * 900000) + 100000)
                     // setMember()
                     handleShow()
                 }))}>
@@ -231,11 +217,11 @@ export default function Edit() {
                             </Row>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">生年月日&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{getYmd()}</Col>
+                                <Col sm={6}>{birthday}</Col>
                             </Row>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">性別&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{genderText()}</Col>
+                                <Col sm={6}>{gender}</Col>
                             </Row>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">メールアドレス&nbsp;&nbsp;|</Col>
