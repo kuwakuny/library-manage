@@ -30,7 +30,6 @@ export default function Edit() {
     const [phone, setPhone] = useState('')
     const [postCode, setPostCode] = useState('')
     const [address, setAddress] = useState('')
-    const [authorityCODE, setAuthorityCODE] = useState(0)
 
     const navigate = useNavigate()
 
@@ -38,12 +37,13 @@ export default function Edit() {
         resolver: yupResolver(userSchema),
     })
 
-    useEffect(() => {
+    const getMember = () => {
         Axios.get('http://localhost:3001/get', { params: { getMemberID: getMemberID } }).then((response) => {
             if (response.data.error) {
                 alert('失敗')
             } else {
                 const r = response.data[0]
+                setMemberID(getMemberID)
                 setPassword(r.password)
                 setNameKanji(r.nameKanji)
                 setNameKana(r.nameKana)
@@ -53,15 +53,18 @@ export default function Edit() {
                 setPhone(r.phone)
                 setPostCode(r.postCode)
                 setAddress(r.address)
-                setAuthorityCODE(r.authorityCODE)
                 reset()
             }
         })
-    }, [reset])
+    }
+
+    useEffect(() => {
+        getMember()
+    }, [])
 
     const addMember = () => {
         Axios.post('http://localhost:3001/register', {
-            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, authorityCODE: authorityCODE, regID: regID
+            memberID: memberID, password: password, nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, regID: regID
         }).then((response) => {
             if (response.data.message) {
                 alert('登録完了')
@@ -76,13 +79,6 @@ export default function Edit() {
     const getYmd = (birthday) => {
         let d = new Date(birthday)
         return d.getFullYear() + '-' + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : '0' + (d.getMonth() + 1)) + '-' + (d.getDate() > 9 ? d.getDate().toString() : '0' + d.getDate().toString())
-    }
-
-    const authorityText = () => {
-        if (authorityCODE === 0) {
-            return '一般会員'
-        }
-        return '管理者'
     }
 
     const [show, setShow] = useState(false)
@@ -166,24 +162,10 @@ export default function Edit() {
                         }} />
                         <span className="errors">{errors?.address?.message}</span>
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                        <div className="form-check">
-                            <input className="form-check-input" type="checkbox" id="flexCheckDefault" onChange={(event) => {
-                                if (event.target.checked === false) {
-                                    setAuthorityCODE(0)
-                                } else {
-                                    setAuthorityCODE(1)
-                                }
-                            }} />
-                            <label className="form-check-label" htmlFor="flexCheckDefault">
-                                登録者に管理者権限を与える。
-                            </label>
-                        </div>
-                    </Form.Group>
                     <div className="border-bottom mt-3" style={{ margin: "-16px" }}></div>
                     <div className="float-end" style={{ marginTop: "30px" }}>
                         <Button variant="secondary" onClick={(() => {
-                            reset()
+                            getMember()
                         })}>リセット</Button>
                         <Button type="submit" className="ms-2" variant="primary">登録</Button>
                     </div>
@@ -201,7 +183,7 @@ export default function Edit() {
                         <Container>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">ユーザーID&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{memberID} </Col>
+                                <Col sm={6}>{getMemberID} </Col>
                             </Row>
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">パスワード&nbsp;&nbsp;|</Col>
@@ -238,10 +220,6 @@ export default function Edit() {
                             <Row className="mb-2">
                                 <Col sm={4} className="text-end text-secondary">住所&nbsp;&nbsp;|</Col>
                                 <Col sm={6}>{address}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">権限&nbsp;&nbsp;|</Col>
-                                <Col sm={6}>{authorityText()}</Col>
                             </Row>
                         </Container>
                     </Modal.Body>
