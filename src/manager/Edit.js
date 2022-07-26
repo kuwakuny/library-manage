@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Modal from 'react-bootstrap/Modal'
-import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Axios from 'axios'
@@ -16,7 +15,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 
 export default function Edit() {
-    const getMemberID = '505008'
+    const getMemberID = '152782'
     const updID = '200000'
 
     const [memberID, setMemberID] = useState('')
@@ -39,8 +38,12 @@ export default function Edit() {
 
     const getMember = () => {
         Axios.get('http://localhost:3001/get', { params: { getMemberID: getMemberID } }).then((response) => {
-            if (response.data.error) {
-                alert('失敗')
+            if (response.data.length === 0) {
+                alert('会員情報呼び出しエラー。')
+                navigate('/manager')
+            } else if (response.data.error) {
+                alert('会員情報呼び出しエラー。')
+                navigate('/manager')
             } else {
                 const r = response.data[0]
                 setMemberID(getMemberID)
@@ -62,13 +65,21 @@ export default function Edit() {
         Axios.put('http://localhost:3001/update', {
             nameKanji: nameKanji, nameKana: nameKana, birthday: birthday, gender: gender, email: email, phone: phone, postCode: postCode, address: address, updID: updID, getMemberID: getMemberID
         }).then((response) => {
-            if (response.data.error) {
-                alert('修正失敗')
-                handleClose()
-
-            } else {
-                alert('修正完了')
-                navigate('/manager')
+            switch (response.data.message) {
+                case 'updated':
+                    alert('修正完了')
+                    navigate('/manager')
+                    break
+                case 'dup email':
+                    alert('メールアドレスが重複しています。')
+                    handleClose()
+                    break
+                case 'dup phone':
+                    alert('電話番号が重複しています。')
+                    handleClose()
+                    break
+                default:
+                    alert('DBエラー。担当者にお問い合わせください。', response.data.error)
             }
         })
     }
@@ -78,16 +89,24 @@ export default function Edit() {
         return d.getFullYear() + '-' + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : '0' + (d.getMonth() + 1)) + '-' + (d.getDate() > 9 ? d.getDate().toString() : '0' + d.getDate().toString())
     }
 
-    const genderText = () => {
-        if (gender === 'm') {
-            return '男性'
-        }
-        return '女性'
-    }
+    const genderText = () => { return (gender === 'm') ? '男性' : '女性' }
 
     const [show, setShow] = useState(false)
     const handleClose = () => setShow(false)
     const handleShow = () => setShow(true)
+
+    const itemNames = ['ユーザーID', 'パスワード', '名前(漢字)', '名前(カタカナ)', '生年月日', '性別', 'メールアドレス', '電話番号', '郵便番号', '住所']
+    const items = [memberID, password, nameKanji, nameKana, birthday, genderText(), email, phone, postCode, address]
+    const itemList = (itemNames, items) => {
+        const result = []
+        for (let i = 0; i < itemNames.length; i++) {
+            result.push(<Row key={i} className="mb-2">
+                <Col sm={4} className="text-end text-secondary">{itemNames[i]}</Col>
+                <Col sm={6}>{items[i]} </Col>
+            </Row>)
+        }
+        return result
+    }
 
     useEffect(() => {
         getMember()
@@ -188,48 +207,7 @@ export default function Edit() {
                         <Modal.Title> 修正情報確認</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Container>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">ユーザーID</Col>
-                                <Col sm={6}>{getMemberID} </Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">パスワード</Col>
-                                <Col sm={6}>{password}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(漢字)</Col>
-                                <Col sm={6}>{nameKanji}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">名前(カタカナ)</Col>
-                                <Col sm={6}>{nameKana}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">生年月日</Col>
-                                <Col sm={6}>{birthday}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">性別</Col>
-                                <Col sm={6}>{genderText()}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">メールアドレス</Col>
-                                <Col sm={6}>{email}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">電話番号</Col>
-                                <Col sm={6}>{phone}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">郵便番号</Col>
-                                <Col sm={6}>{postCode}</Col>
-                            </Row>
-                            <Row className="mb-2">
-                                <Col sm={4} className="text-end text-secondary">住所</Col>
-                                <Col sm={6}>{address}</Col>
-                            </Row>
-                        </Container>
+                        {itemList(itemNames, items)}
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={handleClose}>戻る</Button>
