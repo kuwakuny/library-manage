@@ -38,10 +38,12 @@ export default function Edit() {
 
     const getMember = () => {
         Axios.get('http://localhost:3001/get', { params: { getMemberID: getMemberID } }).then((response) => {
+            /*    
             if (response.data.length === 0) {
-                alert('会員情報呼び出しエラー。')
-                navigate('/manager')
-            } else if (response.data.error) {
+                    alert('会員情報呼び出しエラー。')
+            }
+            */
+            if (response.data.error) {
                 alert('会員情報呼び出しエラー。')
                 navigate('/manager')
             } else {
@@ -89,20 +91,33 @@ export default function Edit() {
         return d.getFullYear() + '-' + ((d.getMonth() + 1) > 9 ? (d.getMonth() + 1).toString() : '0' + (d.getMonth() + 1)) + '-' + (d.getDate() > 9 ? d.getDate().toString() : '0' + d.getDate().toString())
     }
 
-    const genderText = () => { return (gender === 'm') ? '男性' : '女性' }
+    const genderText = () => (gender === 'm') ? '男性' : '女性'
 
     const [show, setShow] = useState(false)
     const handleClose = () => setShow(false)
     const handleShow = () => setShow(true)
 
-    const itemNames = ['ユーザーID', 'パスワード', '名前(漢字)', '名前(カタカナ)', '生年月日', '性別', 'メールアドレス', '電話番号', '郵便番号', '住所']
-    const items = [memberID, password, nameKanji, nameKana, birthday, genderText(), email, phone, postCode, address]
-    const itemList = (itemNames, items) => {
+    const items = {
+        'ユーザーID': memberID,
+        'パスワード': password,
+        '名前(漢字)': nameKanji,
+        '名前(カタカナ)': nameKana,
+        '生年月日': birthday,
+        '性別': genderText(),
+        'メールアドレス': email,
+        '電話番号': phone,
+        '郵便番号': postCode,
+        '住所': address
+    }
+
+    const itemList = (items) => {
+        const itemsKeys = Object.keys(items)
+        const itemsValues = Object.values(items)
         const result = []
-        for (let i = 0; i < itemNames.length; i++) {
+        for (let i = 0; i < itemsKeys.length; i++) {
             result.push(<Row key={i} className="mb-2">
-                <Col sm={4} className="text-end text-secondary">{itemNames[i]}</Col>
-                <Col sm={6}>{items[i]} </Col>
+                <Col sm={4} className="text-end text-secondary">{itemsKeys[i]}</Col>
+                <Col sm={6}>{itemsValues[i]} </Col>
             </Row>)
         }
         return result
@@ -207,7 +222,7 @@ export default function Edit() {
                         <Modal.Title> 修正情報確認</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        {itemList(itemNames, items)}
+                        {itemList(items)}
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={handleClose}>戻る</Button>
