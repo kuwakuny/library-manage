@@ -28,12 +28,20 @@ app.post('/register', (req, res) => {
 
     db.query('INSERT INTO members (memberID, password, nameKanji, nameKana, birthday, gender, email, phone, postCode, address, regID, regDate) VALUES (?,?,?,?,?,?,?,?,?,?,?,now())', [memberID, password, nameKanji, nameKana, birthday, gender, email, phone, postCode, address, regID], (err, result) => {
         if (err) {
-            res.send(err)
             console.log(err)
             console.log("Values Not Inserted")
+            if (err.sqlMessage.includes('PRIMARY')) {
+                res.send({ message: 'dup id' })
+            } else if (err.sqlMessage.includes('email_UNIQUE')) {
+                res.send({ message: 'dup email' })
+            } else if (err.sqlMessage.includes('phone_UNIQUE')) {
+                res.send({ message: 'dup phone' })
+            } else {
+                res.send(err)
+            }
         } else {
-            res.send({ message: 'inserted' })
             console.log("Values Inserted")
+            res.send({ message: 'inserted' })
         }
     })
 })
@@ -41,19 +49,11 @@ app.post('/register', (req, res) => {
 app.get('/get', (req, res) => {
     const { getMemberID } = req.query
     db.query(`SELECT * FROM members WHERE memberID = ${getMemberID}`, (err, result) => {
-        if (err) {
-            res.send(err)
-            console.log(err)
-            console.log("Values Not Selected")
-        } else {
-            res.send(result)
-            console.log("Values Selected")
-        }
+        res.send(result)
     })
 })
 
 app.put('/update', (req, res) => {
-    console.log('hi')
     const updID = req.body.updID
     const getMemberID = req.body.getMemberID
     const nameKanji = req.body.nameKanji
@@ -68,13 +68,24 @@ app.put('/update', (req, res) => {
     db.query('UPDATE members SET nameKanji = ?, nameKana = ?, birthday = ?, gender = ?, email = ?, phone = ?, postCode = ?, address = ?, updID = ?, updDate = now() WHERE memberID = ?', [nameKanji, nameKana, birthday, gender, email, phone, postCode, address, updID, getMemberID], (err, result) => {
         if (err) {
             console.log(err)
+            console.log("Values Not Updated")
+            if (err.sqlMessage.includes('email_UNIQUE')) {
+                res.send({ message: 'dup email' })
+            } else if (err.sqlMessage.includes('phone_UNIQUE')) {
+                res.send({ message: 'dup phone' })
+            } else {
+                res.send(err)
+            }
         } else {
-            res.send(result)
+            console.log("Values Updated")
+            res.send({ message: 'updated' })
         }
     })
 })
 
-// app.delete()
+app.use((req, res, next) => {
+    res.status(404).send('ページが見つかりません。')
+})
 
 app.listen(3001, () => {
     console.log("your server is running on port 3001")
